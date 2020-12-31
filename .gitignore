@@ -1,0 +1,4 @@
+__pycache__
+/React/node_modules
+/src/package-lock.json
+.eslintcache

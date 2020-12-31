@@ -1,0 +1,17 @@
+# Files
+*.txt
+cookies.txt
+site.db
+# Folders
+__pycache__
+.vscode
+conversions
+downloads
+ffmpeg_output
+ffmpeg-progress
+flask_session
+GameScores
+logs
+uploads
+yt-progress
+trims
