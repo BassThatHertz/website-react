@@ -20,40 +20,29 @@ class App extends React.Component {
 
   // MP3
 
-  onMp3EncodingTypeChange = (event) => {
-    this.setState({ mp3EncodingType: event.target.value });
-    this.setState({ mp3Bitrate: '192' });
-    this.setState({ mp3VbrSetting: '0' });
-    console.log(`mp3EncodingType changed to: ${event.target.value}`)
+  onMp3EncodingTypeChange = (e) => {
+    this.setState({ mp3EncodingType: e.target.value});
   };
-  // When the CBR/ABR slider is moved.
-  onMp3BitrateChange = (event) => {
-    this.setState({ mp3Bitrate: event.target.value });
-    document.getElementById('bitrateText').innerHTML = `${event.target.value} kbps`
-    console.log(`mp3Bitrate changed to: ${event.target.value}`)
+  onMp3BitrateChange = (e) => {
+    this.setState({ mp3Bitrate: e.target.value });
+    document.getElementById('bitrateText').innerHTML = `${e.target.value} kbps`
   }
+  onMp3VbrSettingChange = (e) => {
+    this.setState({ mp3VbrSetting: e.target.value })
 
-  onMp3VbrSettingChange = (event) => {
-    this.setState({ mp3VbrSetting: event.target.value })
-    console.log(`mp3VbrSetting changed to: ${event.target.value}`)
   }
 
   // AAC
 
   onAacEncodingTypeChange = (e) => {
     this.setState({ aacEncodingMode: e.target.value});
-    this.setState({ aacSlider: '256' });
-    //this.setState({ aacVbrMode: '5'})
-    console.log('AAC encoding mode:', e.target.value);
   }
   onAacSliderMoved = (e) => {
     this.setState({ aacSlider: e.target.value });
     document.getElementById('fdkvalue').innerHTML = `${e.target.value} kbps`
-    console.log('AAC slider:', e.target.value);
   }
   onAacVbrModeChange = (e) => {
     this.setState({ aacVbrMode: e.target.value} );
-    console.log('AAC VBR:', e.target.value);
   }
 
   submitClicked = () => {
@@ -71,8 +60,9 @@ class App extends React.Component {
         return (
           <Mp3EncodingTypeSelector
             mp3EncodingType={this.state.mp3EncodingType}
-            onMp3EncodingTypeChange={this.onMp3EncodingTypeChange}
             bitrate={this.state.mp3Bitrate}
+            // Passing the functions as props.
+            onMp3EncodingTypeChange={this.onMp3EncodingTypeChange}
             onMp3BitrateChange={this.onMp3BitrateChange}
             onMp3VbrSettingChange={this.onMp3VbrSettingChange} />
         );
