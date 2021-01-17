@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 import os, ast
 from time import time
@@ -72,22 +73,17 @@ def clean_up():
 
 @app.route('/', methods=['POST'])
 def homepage():
-    upload_time = datetime.now().strftime('%H:%M:%S')
-    log.info(f'Upload complete at {upload_time}')
-    uploaded_file = request.files["file"]
-    filename = uploaded_file.filename
-    log.info(uploaded_file)
-    log.info(filename)
-    # Make the filename safe.
-    filename_secure = secure_filename(uploaded_file.filename)
-    log.info(f'secure: {filename_secure}')
-    session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
-    # Save the uploaded file to the uploads folder.
-    uploaded_file.save(session['uploaded_file_path'])
-    session['progress_filename'] = f'{str(time())[:-8]}.txt'
-    return {
-        'download_path': f'uploads/{filename_secure}'
-    }
+    if request.files:
+        log.info(f'Upload complete at {datetime.now().strftime("%H:%M:%S")}')
+        log.info(request.files["file"])
+
+        filename_secure = secure_filename(request.files["file"].filename)
+        session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
+        # Save the uploaded file to the uploads folder.
+        request.files["file"].save(session['uploaded_file_path'])
+
+        session['progress_filename'] = f'{str(time())[:-8]}.txt'
+        return session['progress_filename']
 
     #log.info(request.files[file])
     #log.info(request.form['codec'])
@@ -407,4 +403,4 @@ def handle_message(message):
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, port=3000)
+    socketio.run(app, debug=True, port=5000)
