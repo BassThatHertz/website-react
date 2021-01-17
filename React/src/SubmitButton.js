@@ -1,14 +1,11 @@
-import React from 'react'
-
-class SubmitButton extends React.Component {
-    submitClicked = () => {
-        this.props.onSubmit();
-    }
-
-    render () {
-        return (
-        <button id="convert_btn" className="btn btn-primary" onClick={this.submitClicked}>Submit</button>
-        )
-    }
+function SubmitButton(props) {
+    return (
+        <button id="convert_btn" className="btn btn-primary" onClick={props.onSubmitClicked}>Submit</button>
+    )
 }
+
+        
+ 
+
+
 export default SubmitButton;

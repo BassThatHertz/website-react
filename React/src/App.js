@@ -1,9 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
 import TopBar from './TopBar'; 
 import FileInput from './FileInput';
-import Mp3EncodingTypeSelector from './mp3/EncodingTypeSelector';
-import AacEncodingTypeSelector from './aac/EncodingTypeSelector';
+import AacEncodingTypeSelector from './AAC/EncodingTypeSelector';
+import AC3 from './AC3';
+import DTS from './DTS';
+import FLAC from './FLAC';
+import MKVMP4 from './MKVMP4';
+import Mp3EncodingTypeSelector from './MP3/EncodingTypeSelector';
+import NoOptions from './NoOptions';
+import Opus from './Opus';
+import VorbisEncodingType from './Vorbis/VorbisEncodingType';
 import WavBitDepth from './WAV';
 import SubmitButton from './SubmitButton';
 
@@ -11,16 +19,30 @@ class App extends React.Component {
   state = { 
             file: null,  
             codec: 'MP3',
+            sliderValue: '192',
+            // MP3
             mp3EncodingType: 'cbr',
-            mp3Bitrate: '192',
             mp3VbrSetting: '0',
             // AAC
             aacEncodingMode: 'cbr',
-            aacSlider: '256',
             aacVbrMode: '5',
+            // AC3
+            ac3Bitrate: '640',
+            // DTS
+            dtsBitrate: '768',
+            // FLAC
+            flacCompression: '5',
+            // MKV and MP4
+            videoSetting: 'veryfast', // x264 preset
+            crfValue: '18',
+            // Opus
+            opusType: 'vbr',
+            // Vorbis
+            vorbisEncodingType: 'abr',
+            qValue: '6',
             // WAV
-            wavBitDepth: '24'
-          };
+            wavBitDepth: '16'
+          }
   
   onFileInput = (e) => {
     const filename = e.target.files[0].name;
@@ -44,14 +66,18 @@ class App extends React.Component {
     this.setState({ codec: e.target.value });
   };
 
-  // MP3
+  onBitrateSliderMoved = (e) => {
+    this.setState({ sliderValue: e.target.value })
+    console.log(e.target.value)
+  }
 
+  // MP3
   onMp3EncodingTypeChange = (e) => {
     this.setState({ mp3EncodingType: e.target.value});
   };
   onMp3BitrateChange = (e) => {
     this.setState({ mp3Bitrate: e.target.value });
-    document.getElementById('bitrateText').innerHTML = `${e.target.value} kbps`
+    document.getElementById('bitrateText').innerHTML = ` ${e.target.value} kbps`
   }
   onMp3VbrSettingChange = (e) => {
     this.setState({ mp3VbrSetting: e.target.value })
@@ -59,42 +85,70 @@ class App extends React.Component {
   }
 
   // AAC
-
   onAacEncodingTypeChange = (e) => {
     this.setState({ aacEncodingMode: e.target.value});
-  }
-
-  onAacSliderMoved = (e) => {
-    this.setState({ aacSlider: e.target.value });
-    document.getElementById('fdkvalue').innerHTML = `${e.target.value} kbps`
   }
   onAacVbrModeChange = (e) => {
     this.setState({ aacVbrMode: e.target.value} );
   }
 
+  // AC3
+  onAc3BitrateChange = (e) => {
+    this.setState({ ac3Bitrate: e.target.value })
+  }
+
+  // DTS
+  onDtsBitrateChange = (e) => {
+    this.setState({ dtsBitrate: e.target.value })
+    console.log(e.target.value)
+  }
+
+  // FLAC
+  onFlacCompressionChange = (e) => {
+    this.setState({ flacCompression: e.target.value })
+  }
+
+  // MKV and MP4
+  onVideoSettingChange = (e) => {
+    this.setState({ videoSetting: e.target.value })
+  }
+  onCrfChange = (e) => {
+    this.setState({ crfValue: e.target.value })
+  }
+
+  // Opus
+  onOpusTypeChange = (e) => {
+    this.setState({ opusType: e.target.value })
+    console.log(e.target.value)
+  }
+
+  // Vorbis
+  onVorbisEncodingTypeChange = (e) => {
+    this.setState({ vorbisEncodingType: e.target.value })
+  }
+  onVorbisSliderMoved = (e) => {
+    
+    this.setState({ qValue: e.target.value })
+  }
+
+  // WAV
   onWavBitDepthChange = (e) => {
     this.setState({ wavBitDepth: e.target.value })
     console.log(e.target.value)
   }
 
-  submitClicked = async() => {
+  onSubmitClicked = async() => {
     console.log(this.state)
     const data = new FormData();
     data.append('file', this.state.file)
-  
-    // const response = await fetch("/", {
-    //   method: 'POST',
-    //   body: data
-    // });
-    // const jsonResponse = await response.json()
-    // console.log(jsonResponse)
-    // const downloadLink = jsonResponse.download_path;
-    // console.log(downloadLink)
-    // const anchorTag = document.createElement("a");
-    // anchorTag.href = downloadLink;
-    // anchorTag.download = '';
-    // anchorTag.click();
-  };
+    const response = await fetch("/", {
+      method: 'POST',
+      body: data
+    });
+    const textResponse = await response.text()
+    console.log(textResponse)
+  }
+
 
   renderComponent = () => {
     const codec = this.state.codec
@@ -103,10 +157,10 @@ class App extends React.Component {
         return (
           <Mp3EncodingTypeSelector
             mp3EncodingType={this.state.mp3EncodingType}
-            bitrate={this.state.mp3Bitrate}
+            sliderValue={this.state.sliderValue}
             // Passing the functions as props.
             onMp3EncodingTypeChange={this.onMp3EncodingTypeChange}
-            onMp3BitrateChange={this.onMp3BitrateChange}
+            onBitrateSliderMoved={this.onBitrateSliderMoved}
             onMp3VbrSettingChange={this.onMp3VbrSettingChange}
             vbrSetting={this.state.mp3VbrSetting} />
         );
@@ -115,16 +169,83 @@ class App extends React.Component {
             <AacEncodingTypeSelector
               onAacEncodingTypeChange={this.onAacEncodingTypeChange}
               encodingType={this.state.aacEncodingMode}
-              onSliderMoved={this.onAacSliderMoved}
-              sliderValue={this.state.aacSlider}
+              onBitrateSliderMoved={this.onBitrateSliderMoved}
+              sliderValue={this.state.sliderValue}
               onVbrModeChange={this.onAacVbrModeChange} 
               vbrMode={this.state.aacVbrMode} />
           )
+      case 'AC3':
+        return (
+          <AC3
+            onAc3BitrateChange={this.onAc3BitrateChange}
+            ac3Bitrate={this.state.ac3Bitrate} />
+        )
+      case 'ALAC':
+        return (
+          <NoOptions/>
+        )
+      case 'CAF':
+        return (
+          <NoOptions/>
+        )
+      case 'DTS':
+        return (
+          <DTS 
+            onDtsBitrateChange={this.onDtsBitrateChange}
+            dtsBitrate={this.state.dtsBitrate} />
+        )
+      case 'FLAC':
+        return (
+          <FLAC
+            onFlacCompressionChange={this.onFlacCompressionChange}
+            flacCompression={this.state.flacCompression} />
+        )
+      case 'MKA':
+        return (
+          <NoOptions/>
+        )
+      case 'MKV':
+        return (
+          <MKVMP4
+            onVideoSettingChange={this.onVideoSettingChange}
+            videoSetting={this.state.videoSetting}
+            onCrfChange={this.onCrfChange}
+            crfValue = {this.state.crfValue} />
+        )
+      case 'MP4':
+        return (
+          <MKVMP4
+            onVideoSettingChange={this.onVideoSettingChange}
+            videoSetting={this.state.videoSetting}
+            onCrfChange={this.onCrfChange}
+            crfValue = {this.state.crfValue} />
+        )
+
+      case 'Opus':
+        return (
+          <Opus
+            onOpusTypeChange={this.onOpusTypeChange}
+            opusType={this.state.opusType}
+            onBitrateSliderMoved={this.onBitrateSliderMoved}
+            sliderValue={this.state.sliderValue} />
+        )
+
+      case 'Vorbis':
+        return (
+          <VorbisEncodingType
+            onVorbisEncodingTypeChange={this.onVorbisEncodingTypeChange}
+            vorbisEncodingType={this.state.vorbisEncodingType}
+            onSliderMoved={this.onVorbisSliderMoved}
+            qValue={this.state.qValue}
+            onBitrateSliderMoved={this.onBitrateSliderMoved}
+            sliderValue={this.state.sliderValue} />
+
+        )
       case 'WAV':
         return (
           <WavBitDepth
-          onWavBitDepthChange={this.onWavBitDepthChange}
-          bitDepth={this.state.wavBitDepth}/>
+            onWavBitDepthChange={this.onWavBitDepthChange}
+            bitDepth={this.state.wavBitDepth}/>
         )
       default:
         return null;
@@ -166,11 +287,12 @@ class App extends React.Component {
               {this.renderComponent()}<br/>
               <hr/><h5>Output Filename</h5>
               <input type="text" autoComplete="off" className="form-control" maxLength="200" id="output_name" required/><br/>
-              <SubmitButton onSubmit={this.submitClicked} />
+              <SubmitButton 
+                onSubmitClicked={this.onSubmitClicked} />
             </div>
           </Route>
           <Route path='/test'>
-            <SubmitButton/>
+            
           </Route>
         </Switch>
       </Router>

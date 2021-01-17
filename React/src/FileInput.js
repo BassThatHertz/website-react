@@ -1,9 +1,4 @@
-import React from 'react';
-
 function fileInput(props) {
-    async function bla() {
-        console.log('test')
-    }
     return (
         <div className="custom-file">
             <input 

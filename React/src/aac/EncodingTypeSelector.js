@@ -1,18 +1,21 @@
-import React from 'react';
-import BitrateSlider from './BitrateSlider'
-import VbrDropdown from './VbrDropdown'
+import BitrateSlider from '../BitrateSlider';
+import VbrDropdown from './VbrDropdown';
 
 function AacEncodingTypeSelector(props) {
+
     function renderComponent() {
         switch (props.encodingType) {
           case 'cbr':
             return <BitrateSlider 
-                    sliderMoved={props.onSliderMoved}
-                    bitrate={props.sliderValue} />;
+                        onBitrateSliderMoved={props.onBitrateSliderMoved}
+                        sliderValue={props.sliderValue}
+                        min='32'
+                        max='512'
+                        step='32' />
           case 'vbr':
             return <VbrDropdown
-                    onVbrModeChange={props.onVbrModeChange}
-                    vbrMode={props.vbrMode} />;
+                        onVbrModeChange={props.onVbrModeChange}
+                        vbrMode={props.vbrMode} />
           default:
             return null;
         }
