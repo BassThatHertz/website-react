@@ -65,7 +65,7 @@ h1 {
   padding-bottom: 22px;
   margin: 0; /* No gap between the black background of the title and the tagline */
 }
-.tagline{
+#tagline{
   text-align: center;
   background: darkblue;
   color:white;

@@ -16,7 +16,9 @@ function Mp3EncodingTypeSelector(props) {
                 onMp3BitrateChange={props.onMp3BitrateChange}
                 bitrate={props.bitrate} />;
       case 'vbr':
-        return <VbrDropdown onVbrSettingChange={props.onVbrSettingChange} />;
+        return <VbrDropdown
+                onVbrSettingChange={props.onVbrSettingChange}
+                vbrSetting={props.vbrSetting} />;
       default:
         return null;
     }

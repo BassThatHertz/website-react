@@ -3,7 +3,6 @@ import BitrateSlider from './BitrateSlider'
 import VbrDropdown from './VbrDropdown'
 
 function AacEncodingTypeSelector(props) {
-    
     function renderComponent() {
         switch (props.encodingType) {
           case 'cbr':
@@ -11,7 +10,7 @@ function AacEncodingTypeSelector(props) {
                     sliderMoved={props.onSliderMoved}
                     bitrate={props.sliderValue} />;
           case 'vbr':
-            return <VbrDropdown o
+            return <VbrDropdown
                     onVbrModeChange={props.onVbrModeChange}
                     vbrMode={props.vbrMode} />;
           default:
@@ -22,7 +21,7 @@ function AacEncodingTypeSelector(props) {
     return (
         <div id="FDK">
             <label htmlFor="fdk_encoding">CBR or VBR:</label>
-            <select id="fdk_encoding" onChange={props.onAacEncodingTypeChange}>
+            <select id="fdk_encoding" onChange={props.onAacEncodingTypeChange} value={props.encodingType}>
                 <option disabled value>Select Encoding Type</option>
                 <option value="cbr">CBR (Constant Bitrate)</option>
                 <option value="vbr">VBR (Variable Bitrate)</option>

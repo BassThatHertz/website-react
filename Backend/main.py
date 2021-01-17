@@ -70,159 +70,177 @@ def clean_up():
     log.info(f'Deleted conversions/{session["converted_file_name"]}')
 
 
-# When a file has been uploaded, a POST request is sent to the homepage.
 @app.route('/', methods=['POST'])
 def homepage():
-    if request.data:
-        print(ast.literal_eval(request.data.decode('utf-8')))
-        log.info(ast.literal_eval(request.data.decode('utf-8')))
-        log.info(ast.literal_eval(request.data.decode('utf-8'))['codec'])
-        return ''
+    upload_time = datetime.now().strftime('%H:%M:%S')
+    log.info(f'Upload complete at {upload_time}')
+    uploaded_file = request.files["file"]
+    filename = uploaded_file.filename
+    log.info(uploaded_file)
+    log.info(filename)
+    # Make the filename safe.
+    filename_secure = secure_filename(uploaded_file.filename)
+    log.info(f'secure: {filename_secure}')
+    session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
+    # Save the uploaded file to the uploads folder.
+    uploaded_file.save(session['uploaded_file_path'])
+    session['progress_filename'] = f'{str(time())[:-8]}.txt'
+    return {
+        'download_path': f'uploads/{filename_secure}'
+    }
 
-    elif request.form["request_type"] == "convert_url":
-        session['progress_filename'] = f'{str(time())[:-8]}.txt'
-        return session['progress_filename']
+    #log.info(request.files[file])
+    #log.info(request.form['codec'])
+    #print(ast.literal_eval(request.data.decode('utf-8')))
+    #log.info(ast.literal_eval(request.data.decode('utf-8')))
+    #log.info(request.data['file'])
+    #log.info(ast.literal_eval(request.data.decode('utf-8'))['codec'])
+    return ''
 
-    elif request.form["request_type"] == "uploaded":
-        upload_time = datetime.now().strftime('%H:%M:%S')
-        log.info(f'Upload complete at {upload_time}')
-        uploaded_file = request.files["chosen_file"]
-        session['uploaded_file'] = uploaded_file.filename
-        filesize = request.form["filesize"]
-        log.info(uploaded_file)
-        log.info(f'Size: {filesize} MB')
-        # Make the filename safe.
-        filename_secure = secure_filename(uploaded_file.filename)
-        session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
-        # Save the uploaded file to the uploads folder.
-        uploaded_file.save(session['uploaded_file_path'])
+    # elif request.form["request_type"] == "convert_url":
+    #     session['progress_filename'] = f'{str(time())[:-8]}.txt'
+    #     return session['progress_filename']
 
-        conversion_progress_filename = f'{str(time())[:-8]}.txt'
-        session['progress_filename'] = conversion_progress_filename
-        return session['progress_filename']
+    # elif request.form["request_type"] == "uploaded":
+    #     upload_time = datetime.now().strftime('%H:%M:%S')
+    #     log.info(f'Upload complete at {upload_time}')
+    #     uploaded_file = request.files["chosen_file"]
+    #     session['uploaded_file'] = uploaded_file.filename
+    #     filesize = request.form["filesize"]
+    #     log.info(uploaded_file)
+    #     log.info(f'Size: {filesize} MB')
+    #     # Make the filename safe.
+    #     filename_secure = secure_filename(uploaded_file.filename)
+    #     session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
+    #     # Save the uploaded file to the uploads folder.
+    #     uploaded_file.save(session['uploaded_file_path'])
 
-    elif request.form["request_type"] == "convert":
-        filename = request.form["filename"]
+    #     conversion_progress_filename = f'{str(time())[:-8]}.txt'
+    #     session['progress_filename'] = conversion_progress_filename
+    #     return session['progress_filename']
 
-        if 'http' in filename and '://' in filename:
-            uploaded_file_path = filename
-        else:
-            uploaded_file_path = os.path.join("uploads", secure_filename(filename))
+    # elif request.form["request_type"] == "convert":
+    #     filename = request.form["filename"]
 
-        chosen_codec = request.form["chosen_codec"]
-        crf_value = request.form["crf_value"]
-        video_mode = request.form["video_mode"]
-        is_keep_video = request.form["is_keep_video"]
-        # MP3
-        mp3_encoding_type = request.form["mp3_encoding_type"]
-        mp3_bitrate = request.form["mp3_bitrate"]
-        mp3_vbr_setting = request.form["mp3_vbr_setting"]
-        # AAC
-        fdk_type = request.form["fdk_type"]
-        fdk_cbr = request.form["fdk_cbr"]
-        fdk_vbr = request.form["fdk_vbr"]
-        is_fdk_lowpass = request.form["is_fdk_lowpass"]
-        fdk_lowpass = request.form["fdk_lowpass"]
-        # Vorbis
-        vorbis_encoding = request.form["vorbis_encoding"]
-        vorbis_quality = request.form["vorbis_quality"]
-        # Vorbis/Opus
-        opus_vorbis_slider = request.form["opus_vorbis_slider"]
-        # AC3
-        ac3_bitrate = request.form["ac3_bitrate"]
-        # FLAC
-        flac_compression = request.form["flac_compression"]
-        # DTS
-        dts_bitrate = request.form["dts_bitrate"]
-        # Opus
-        opus_cbr_bitrate = request.form["opus_cbr_bitrate"]
-        opus_encoding_type = request.form["opus_encoding_type"]
-        # WAV
-        wav_bit_depth = request.form["wav_bit_depth"]
-        # Desired filename
-        output_name = request.form["output_name"]
+    #     if 'http' in filename and '://' in filename:
+    #         uploaded_file_path = filename
+    #     else:
+    #         uploaded_file_path = os.path.join("uploads", secure_filename(filename))
 
-        log.info(f'They chose {chosen_codec} | Output Filename: {output_name}')
-        output_path = os.path.join('conversions', output_name)
-        extension = None
+    #     chosen_codec = request.form["chosen_codec"]
+    #     crf_value = request.form["crf_value"]
+    #     video_mode = request.form["video_mode"]
+    #     is_keep_video = request.form["is_keep_video"]
+    #     # MP3
+    #     mp3_encoding_type = request.form["mp3_encoding_type"]
+    #     mp3_bitrate = request.form["mp3_bitrate"]
+    #     mp3_vbr_setting = request.form["mp3_vbr_setting"]
+    #     # AAC
+    #     fdk_type = request.form["fdk_type"]
+    #     fdk_cbr = request.form["fdk_cbr"]
+    #     fdk_vbr = request.form["fdk_vbr"]
+    #     is_fdk_lowpass = request.form["is_fdk_lowpass"]
+    #     fdk_lowpass = request.form["fdk_lowpass"]
+    #     # Vorbis
+    #     vorbis_encoding = request.form["vorbis_encoding"]
+    #     vorbis_quality = request.form["vorbis_quality"]
+    #     # Vorbis/Opus
+    #     opus_vorbis_slider = request.form["opus_vorbis_slider"]
+    #     # AC3
+    #     ac3_bitrate = request.form["ac3_bitrate"]
+    #     # FLAC
+    #     flac_compression = request.form["flac_compression"]
+    #     # DTS
+    #     dts_bitrate = request.form["dts_bitrate"]
+    #     # Opus
+    #     opus_cbr_bitrate = request.form["opus_cbr_bitrate"]
+    #     opus_encoding_type = request.form["opus_encoding_type"]
+    #     # WAV
+    #     wav_bit_depth = request.form["wav_bit_depth"]
+    #     # Desired filename
+    #     output_name = request.form["output_name"]
 
-        # AAC
-        if chosen_codec == 'AAC':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, fdk_type, fdk_cbr,
-                      fdk_vbr, is_fdk_lowpass, fdk_lowpass, output_path]
-            extension = run_converter('aac', params)
+    #     log.info(f'They chose {chosen_codec} | Output Filename: {output_name}')
+    #     output_path = os.path.join('conversions', output_name)
+    #     extension = None
 
-        # AC3
-        elif chosen_codec == 'AC3':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, ac3_bitrate, output_path]
-            extension = run_converter('ac3', params)
+    #     # AAC
+    #     if chosen_codec == 'AAC':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, fdk_type, fdk_cbr,
+    #                   fdk_vbr, is_fdk_lowpass, fdk_lowpass, output_path]
+    #         extension = run_converter('aac', params)
 
-        # ALAC
-        elif chosen_codec == 'ALAC':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, output_path]
-            extension = run_converter('alac', params)
+    #     # AC3
+    #     elif chosen_codec == 'AC3':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, ac3_bitrate, output_path]
+    #         extension = run_converter('ac3', params)
 
-        # CAF
-        elif chosen_codec == 'CAF':
-            params = [session['progress_filename'], uploaded_file_path, output_path]
-            extension = run_converter('caf', params)
+    #     # ALAC
+    #     elif chosen_codec == 'ALAC':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, output_path]
+    #         extension = run_converter('alac', params)
 
-        # DTS
-        elif chosen_codec == 'DTS':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, dts_bitrate, output_path]
-            extension = run_converter('dts', params)
+    #     # CAF
+    #     elif chosen_codec == 'CAF':
+    #         params = [session['progress_filename'], uploaded_file_path, output_path]
+    #         extension = run_converter('caf', params)
 
-        # FLAC
-        elif chosen_codec == 'FLAC':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, flac_compression,
-                      output_path]
-            extension = run_converter('flac', params)
+    #     # DTS
+    #     elif chosen_codec == 'DTS':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, dts_bitrate, output_path]
+    #         extension = run_converter('dts', params)
 
-        # MKA
-        elif chosen_codec == 'MKA':
-            params = [session['progress_filename'], uploaded_file_path, output_path]
-            extension = run_converter('mka', params)
+    #     # FLAC
+    #     elif chosen_codec == 'FLAC':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, flac_compression,
+    #                   output_path]
+    #         extension = run_converter('flac', params)
 
-        # MKV
-        elif chosen_codec == 'MKV':
-            params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
-            extension = run_converter('mkv', params)
+    #     # MKA
+    #     elif chosen_codec == 'MKA':
+    #         params = [session['progress_filename'], uploaded_file_path, output_path]
+    #         extension = run_converter('mka', params)
 
-        # MP3
-        elif chosen_codec == 'MP3':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, mp3_encoding_type,
-                      mp3_bitrate, mp3_vbr_setting, output_path]
-            extension = run_converter('mp3', params)
+    #     # MKV
+    #     elif chosen_codec == 'MKV':
+    #         params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
+    #         extension = run_converter('mkv', params)
 
-        # MP4
-        elif chosen_codec == 'MP4':
-            params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
-            extension = run_converter('mp4', params)
+    #     # MP3
+    #     elif chosen_codec == 'MP3':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, mp3_encoding_type,
+    #                   mp3_bitrate, mp3_vbr_setting, output_path]
+    #         extension = run_converter('mp3', params)
 
-        # Opus
-        elif chosen_codec == 'Opus':
-            params = [session['progress_filename'], uploaded_file_path, opus_encoding_type, opus_vorbis_slider,
-                      opus_cbr_bitrate, output_path]
-            extension = run_converter('opus', params)
+    #     # MP4
+    #     elif chosen_codec == 'MP4':
+    #         params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
+    #         extension = run_converter('mp4', params)
 
-        # Vorbis
-        elif chosen_codec == 'Vorbis':
-            params = [session['progress_filename'], uploaded_file_path, vorbis_encoding, vorbis_quality,
-                      opus_vorbis_slider, output_path]
-            extension = run_converter('vorbis', params)
+    #     # Opus
+    #     elif chosen_codec == 'Opus':
+    #         params = [session['progress_filename'], uploaded_file_path, opus_encoding_type, opus_vorbis_slider,
+    #                   opus_cbr_bitrate, output_path]
+    #         extension = run_converter('opus', params)
 
-        # WAV
-        elif chosen_codec == 'WAV':
-            params = [session['progress_filename'], uploaded_file_path, is_keep_video, wav_bit_depth,
-                      output_path]
-            extension = run_converter('wav', params)
+    #     # Vorbis
+    #     elif chosen_codec == 'Vorbis':
+    #         params = [session['progress_filename'], uploaded_file_path, vorbis_encoding, vorbis_quality,
+    #                   opus_vorbis_slider, output_path]
+    #         extension = run_converter('vorbis', params)
 
-        if extension['error'] is not None:
-            return extension, 500
-        else:
-            # Filename after conversion.
-            session['converted_file_name'] = f'{output_name}{extension["ext"]}'
-            return extension
+    #     # WAV
+    #     elif chosen_codec == 'WAV':
+    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, wav_bit_depth,
+    #                   output_path]
+    #         extension = run_converter('wav', params)
+
+    #     if extension['error'] is not None:
+    #         return extension, 500
+    #     else:
+    #         # Filename after conversion.
+    #         session['converted_file_name'] = f'{output_name}{extension["ext"]}'
+    #         return extension
 
 
 @app.route("/ffmpeg-progress/<filename>")
@@ -237,16 +255,14 @@ def get_ffmpeg_output(filename):
 
 
 # app.js directs the user to this URL when the conversion is complete.
-@app.route("/conversions/<filename>", methods=["GET"])
+@app.route("/uploads/<filename>", methods=["GET"])
 def send_file(filename):
     log.info(f'{datetime.now().strftime("[%H:%M:%S]")} https://free-av-tools.com/conversions/{filename}')
     mimetype_value = 'audio/mp4' if os.path.splitext(filename)[1] == ".m4a" else ''
     try:
-        return send_from_directory('conversions', filename, mimetype=mimetype_value, as_attachment=True)
+        return send_from_directory('uploads', filename, mimetype=mimetype_value, as_attachment=True)
     except Exception as error:
         log.error(f'Unable to send conversions/{filename}. Error: \n{error}')
-    finally:
-        clean_up()
 
     
 # Game 1
@@ -306,9 +322,7 @@ def save_game2_stats():
 
 @app.route("/")
 def homepage_visited():
-    log_visit("visited homepage")
-    with open('../React/public/index.html') as f:
-        return f.read()
+    return render_template('index.html')
 
 
 @app.route("/about")
@@ -393,4 +407,4 @@ def handle_message(message):
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, port=3000)
