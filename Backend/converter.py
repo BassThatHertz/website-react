@@ -7,7 +7,7 @@ from loggers import log
 os.makedirs('ffmpeg-progress', exist_ok=True)
 os.makedirs('ffmpeg_output', exist_ok=True)
 # If you want to run this web app locally, change this (if necessary) to the path of your FFmpeg executable.
-ffmpeg_path = '/home/h/bin/ffmpeg'
+ffmpeg_path = 'ffmpeg'
 
 
 def run_ffmpeg(progress_filename, uploaded_file_path, params, output_name):
@@ -20,8 +20,8 @@ def run_ffmpeg(progress_filename, uploaded_file_path, params, output_name):
     log.info(f'Converting {uploaded_file_path}...')
     start_time = time()
     filename_without_ext = os.path.splitext(output_name)[0][12:]
-    ffmpeg_output_file = f'ffmpeg_output/{filename_without_ext}.txt'
-    open(ffmpeg_output_file, 'w').close()
+    ffmpeg_output_file = os.path.join('ffmpeg_output',f'{filename_without_ext}.txt')
+    with open(ffmpeg_output_file, 'w'): pass
 
     process = subprocess.run([ffmpeg_path, '-hide_banner', '-progress', progress_file_path, '-y', '-i', uploaded_file_path,
                         '-metadata', 'comment=Transcoded using free-av-tools.com', '-metadata',
@@ -49,48 +49,35 @@ def run_ffmpeg(progress_filename, uploaded_file_path, params, output_name):
 
 
 # AAC
-def aac(progress_filename, uploaded_file_path, is_keep_video, fdk_type, fdk_cbr, fdk_vbr, is_fdk_lowpass,
-        fdk_lowpass, output_path):
+def aac(progress_filename, uploaded_file_path, is_keep_video, fdk_type, fdk_cbr, fdk_vbr, output_path):
     # Keep the video (if applicable)
     if is_keep_video == "yes":
         ext = os.path.splitext(uploaded_file_path)[-1]
         output_ext = 'mp4' if ext == '.mp4' else '.mkv'
         # CBR
         if fdk_type == "fdk_cbr":
-            if is_fdk_lowpass == "yes":
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -cutoff {fdk_lowpass} '
-                           f'-b:a {fdk_cbr}k -c:s copy', f'{output_path}.{output_ext}')
-            else:
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -b:a {fdk_cbr}k '
-                           f'-c:s copy', f'{output_path}.{output_ext}')
+            return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac '
+                        f'-b:a {fdk_cbr}k -c:s copy', f'{output_path}.{output_ext}')
+        
         # VBR
         else:
-            if is_fdk_lowpass == "yes":
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -cutoff {fdk_lowpass} '
-                           f'-vbr {fdk_vbr} -c:s copy', f'{output_path}.{output_ext}')
-            else:
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -vbr {fdk_vbr} '
-                           f'-c:s copy', f'{output_path}.{output_ext}')
-
+            return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac '
+                        f'-vbr {fdk_vbr} -c:s copy', f'{output_path}.{output_ext}')
+        
+  
     # Audio-only output file,outpt
     else:
         output_ext = 'm4a'
         # CBR
         if fdk_type == "fdk_cbr":
-            if is_fdk_lowpass == "yes":
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -cutoff {fdk_lowpass} '
-                           f'-b:a {fdk_cbr}k', f'{output_path}.m4a')
-            else:
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -b:a {fdk_cbr}k',
-                           f'{output_path}.m4a')
+            return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -b:a {fdk_cbr}k',
+                        f'{output_path}.m4a')
         # VBR
         else:
-            if is_fdk_lowpass == "yes":
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -cutoff {fdk_lowpass} '
-                           f'-vbr {fdk_vbr}', f'{output_path}.m4a')
-            else:
-                return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac -vbr {fdk_vbr}',
-                           f'{output_path}.m4a')
+            return run_ffmpeg(progress_filename, uploaded_file_path, f'-c:v copy -c:a libfdk_aac '
+                        f'-vbr {fdk_vbr}', f'{output_path}.m4a')
+          
+         
 
 
 # AC3

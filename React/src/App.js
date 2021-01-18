@@ -7,6 +7,7 @@ import AacEncodingTypeSelector from './AAC/EncodingTypeSelector';
 import AC3 from './AC3';
 import DTS from './DTS';
 import FLAC from './FLAC';
+import IsKeepVideo from './IsKeepVideo';
 import MKVMP4 from './MKVMP4';
 import Mp3EncodingTypeSelector from './MP3/EncodingTypeSelector';
 import NoOptions from './NoOptions';
@@ -14,6 +15,9 @@ import Opus from './Opus';
 import VorbisEncodingType from './Vorbis/VorbisEncodingType';
 import WavBitDepth from './WAV';
 import SubmitButton from './SubmitButton';
+
+import start from './Functions/Start';
+
 
 class App extends React.Component {
   state = { 
@@ -32,6 +36,8 @@ class App extends React.Component {
             dtsBitrate: '768',
             // FLAC
             flacCompression: '5',
+            // Keep the video?
+            isKeepVideo: 'no',
             // MKV and MP4
             videoSetting: 'veryfast', // x264 preset
             crfValue: '18',
@@ -108,6 +114,12 @@ class App extends React.Component {
     this.setState({ flacCompression: e.target.value })
   }
 
+  // isKeepVideo
+  onIsKeepVideoChange = (e) => {
+    this.setState({ isKeepVideo: e.target.value })
+    console.log(e.target.value)
+  }
+
   // MKV and MP4
   onVideoSettingChange = (e) => {
     this.setState({ videoSetting: e.target.value })
@@ -139,14 +151,17 @@ class App extends React.Component {
 
   onSubmitClicked = async() => {
     console.log(this.state)
-    const data = new FormData();
-    data.append('file', this.state.file)
-    const response = await fetch("/", {
-      method: 'POST',
-      body: data
-    });
-    const textResponse = await response.text()
-    console.log(textResponse)
+    start(this.state)
+    // upload_and_send_conversion_request()
+    // console.log(this.state)
+    // const data = new FormData();
+    // data.append('file', this.state.file)
+    // const response = await fetch("/", {
+    //   method: 'POST',
+    //   body: data
+    // });
+    // const textResponse = await response.text()
+    // console.log(textResponse)
   }
 
 
@@ -155,14 +170,20 @@ class App extends React.Component {
     switch (codec) {
       case 'MP3':
         return (
-          <Mp3EncodingTypeSelector
-            mp3EncodingType={this.state.mp3EncodingType}
-            sliderValue={this.state.sliderValue}
-            // Passing the functions as props.
-            onMp3EncodingTypeChange={this.onMp3EncodingTypeChange}
-            onBitrateSliderMoved={this.onBitrateSliderMoved}
-            onMp3VbrSettingChange={this.onMp3VbrSettingChange}
-            vbrSetting={this.state.mp3VbrSetting} />
+          <div>
+            <Mp3EncodingTypeSelector
+              mp3EncodingType={this.state.mp3EncodingType}
+              sliderValue={this.state.sliderValue}
+              // Passing the functions as props.
+              onMp3EncodingTypeChange={this.onMp3EncodingTypeChange}
+              onBitrateSliderMoved={this.onBitrateSliderMoved}
+              onMp3VbrSettingChange={this.onMp3VbrSettingChange}
+              vbrSetting={this.state.mp3VbrSetting} />
+            <IsKeepVideo
+              onIsKeepVideoChange={this.onIsKeepVideoChange}
+              isKeepVideo={this.state.isKeepVideo} />
+          </div>
+            
         );
       case 'AAC':
           return (
@@ -287,8 +308,37 @@ class App extends React.Component {
               {this.renderComponent()}<br/>
               <hr/><h5>Output Filename</h5>
               <input type="text" autoComplete="off" className="form-control" maxLength="200" id="output_name" required/><br/>
+              <div id="alert_wrapper" style={{display: 'none'}}/>
               <SubmitButton 
                 onSubmitClicked={this.onSubmitClicked} />
+              <button className="btn btn-primary d-none" id="uploading_btn" type="button" disabled>
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                Uploading file for conversion...
+              </button>
+              <>
+              {/*"Cancel upload" button (Bootstrap class)*/}
+              <button type="button" id="cancel_btn" className="btn btn-secondary d-none">Cancel upload</button>
+              </>
+              <>
+              {/*"Converting..." button (Bootstrap class)*/}
+              <div className="text-center" id="converting_btn" style={{display: 'none'}}>
+                <button className="btn btn-info" disabled>
+                  <span className="spinner-border spinner-border-sm" />
+                  Converting...</button>
+              </div>
+              {/*Upload progress bar*/}
+              <div id="progress_wrapper" style={{display: 'none'}}>
+                <br />
+                <div className="progress mb-3"> {/*Bootstrap class*/}
+                  <div id="progress_bar" className="progress-bar" role="progressbar" aria-valuenow={0} aria-valuemin={0} aria-valuemax={100} />
+                </div>
+                <p id="progress_status" />
+              </div>
+              </>
+              <>
+              {/*ENCODER PROGRESS*/}
+              <p id="progress" style={{display: 'none'}} />
+              </>
             </div>
           </Route>
           <Route path='/test'>

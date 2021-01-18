@@ -2,7 +2,7 @@ function MKVMP4(props) {
     return (
         <div id="video">
             <label htmlFor="video_mode">FFmpeg setting:</label>
-            <select onChange={props.onVideoSettingChange} value={props.videoSetting}>
+            <select id="video_mode" onChange={props.onVideoSettingChange} value={props.videoSetting}>
                 <option value="keep_codecs">[1] -c copy</option>
                 <option value="keep_video_codec">[2] -c:v copy -c:a libfdk_aac -vbr 5</option>
                 <option value="convert_video_keep_audio">[3] -c:v libx264 -c:a copy</option>

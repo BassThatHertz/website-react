@@ -10,12 +10,13 @@ const uploadingButton = document.getElementById("uploading_btn");
 const cancelButton = document.getElementById("cancel_btn");
 const alertWrapper = document.getElementById("alert_wrapper");
 const progressParagraph = document.getElementById('progress');
+
 convertButton.addEventListener('click', () => {    
     convertButtonClicked();
     upload_and_send_conversion_request();    
 });
 
-function show_alert(message, type) {
+export function show_alert(message, type) {
     alertWrapper.style.display = 'block';
     alertWrapper.innerHTML =
     `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -26,8 +27,8 @@ function show_alert(message, type) {
     </div>`
 }
 
-// This function runs when a file is selected.
-function updateBoxes() {
+// This export function runs when a file is selected.
+export function updateBoxes() {
     inputLabel.innerText = input.files[0].name; // Show the name of the selected file.
     const inputFilename = input.files[0].name;
     const nameWithoutExt = inputFilename.split('.').slice(0, -1).join('.')
@@ -36,7 +37,7 @@ function updateBoxes() {
     outputNameBox.value = defaultOutputName;
 }
 
-async function convertButtonClicked() {
+export async function convertButtonClicked() {
     fetch('/', {
         method: 'POST',
         body: 'The user clicked on the convert button.'
@@ -47,8 +48,8 @@ let previousTime = Date.now() / 1000;
 let previousLoaded = 0;
 let previousPercentageComplete = 0;
 
-// A function that shows the upload progress.
-function showProgress(event) {
+// A export function that shows the upload progress.
+export function showProgress(event) {
     const loaded = event.loaded / 10 ** 6;
     const total = event.total / 10 ** 6;
     const percentageComplete = Math.floor((loaded / total) * 100);
@@ -84,12 +85,12 @@ function showProgress(event) {
     previousPercentageComplete = percentageComplete;
 }
 
-function getProgressFilename(request, data) {
+export function getProgressFilename(request, data) {
     uploadingButton.classList.add('d-none');
     cancelButton.classList.add('d-none');
     progressWrapper.classList.add("d-none");
     if (request.status == 200) {
-        progressFilename = request.responseText;
+        const progressFilename = request.responseText;
         document.getElementById("converting_btn").style.display = 'block';
         progressParagraph.style.display = 'block';
         sendConversionRequest(data);
@@ -99,7 +100,7 @@ function getProgressFilename(request, data) {
     }
 }
 
-async function sendConversionRequest(filename) { 
+export async function sendConversionRequest(filename) { 
     const chosenCodec = document.getElementById('codecs').value;
     const videoMode = document.getElementById('video_mode').value;
     const opusVorbisSlider = document.getElementById("opus_vorbis_slider").value;
@@ -182,13 +183,13 @@ async function sendConversionRequest(filename) {
     }
 }
 
-// A function that creates a synchronous sleep.
-function sleep(ms) {
+// A export function that creates a synchronous sleep.
+export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// This function runs while the file is being converted.
-async function showConversionProgress() {
+// This export function runs while the file is being converted.
+export async function showConversionProgress() {
     while (shouldLog) {
         const conversionProgressResponse = await fetch(`ffmpeg-progress/${progressFilename}`);
         const textInFile = await conversionProgressResponse.text();
@@ -208,8 +209,8 @@ async function showConversionProgress() {
     //     <a href="${logFile}" target="_blank">here</a>.`, "success");
 }
 
-// This function runs when the user clicks on the convert button.
-function upload_and_send_conversion_request() {
+// This export function runs when the user clicks on the convert button.
+export function upload_and_send_conversion_request() {
     // Show an alert if a file hasn't been selected or the URL input box is empty.
     if (!input.value && !document.getElementById("output_name").value && !urlInput.value) {
         show_alert("It helps if you select the file that you want to convert.", "warning");
@@ -301,20 +302,20 @@ function upload_and_send_conversion_request() {
 }
 
 // Abort the upload request if the cancel button is clicked.
-function abortUpload(progressFilenameRequest) {
+export function abortUpload(progressFilenameRequest) {
     progressFilenameRequest.abort();
     show_alert(`Upload cancelled`, "info");
     reset();
 }
 
-function showError(progressFilenameRequest) {
+export function showError(progressFilenameRequest) {
     show_alert(`${progressFilenameRequest.responseText}`, "danger");
     console.log(`progressFilenameRequest error: ${progressFilenameRequest.responseText}`);
     reset();
 }
 
-// A function that resets the page.
-function reset() {
+// A export function that resets the page.
+export function reset() {
     document.getElementById("converting_btn").style.display = 'none ';
     conversionProgress.style.display = 'none';
     input.disabled = false;

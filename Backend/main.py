@@ -29,14 +29,14 @@ app.register_blueprint(trimmer)
 
 # The database object (db) needs to be defined in main.py even though we're not using the database in main.py
 # Otherwise you get the following error:
-# "AssertionError: The sqlalchemy extension was not registered to the current application."
+# 'AssertionError: The sqlalchemy extension was not registered to the current application.'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # For the chat section of the website.
 socketio = SocketIO(app)
-socketio.init_app(app, cors_allowed_origins="*")
+socketio.init_app(app, cors_allowed_origins='*')
 
 SESSION_TYPE = 'filesystem'
 app.config.from_object(__name__)
@@ -48,18 +48,18 @@ os.makedirs('conversions', exist_ok=True)
 
 def run_converter(codec, params):
     codec_to_converter = {
-                            "aac": converter.aac,
-                            "ac3": converter.ac3,
-                            "alac": converter.alac,
-                            "dts": converter.dts,
-                            "flac": converter.flac,
-                            "mka": converter.mka,
-                            "mkv": converter.mkv,
-                            "mp3": converter.mp3,
-                            "mp4": converter.mp4,
-                            "opus": converter.opus,
-                            "vorbis": converter.vorbis,
-                            "wav": converter.wav
+                            'aac': converter.aac,
+                            'ac3': converter.ac3,
+                            'alac': converter.alac,
+                            'dts': converter.dts,
+                            'flac': converter.flac,
+                            'mka': converter.mka,
+                            'mkv': converter.mkv,
+                            'mp3': converter.mp3,
+                            'mp4': converter.mp4,
+                            'opus': converter.opus,
+                            'vorbis': converter.vorbis,
+                            'wav': converter.wav
     }
     return codec_to_converter[codec](*params)
 
@@ -73,188 +73,157 @@ def clean_up():
 
 @app.route('/', methods=['POST'])
 def homepage():
-    if request.files:
+    if request.form['request_type'] =='uploaded':
         log.info(f'Upload complete at {datetime.now().strftime("%H:%M:%S")}')
-        log.info(request.files["file"])
-
-        filename_secure = secure_filename(request.files["file"].filename)
+        log.info(request.files['chosen_file'])
+        filename_secure = secure_filename(request.files['chosen_file'].filename)
         session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
+        uploaded_file_path = session['uploaded_file_path']
         # Save the uploaded file to the uploads folder.
-        request.files["file"].save(session['uploaded_file_path'])
-
+        request.files['chosen_file'].save(session['uploaded_file_path'])
         session['progress_filename'] = f'{str(time())[:-8]}.txt'
+        with open(f'ffmpeg-progress/{session["progress_filename"]}', 'w'): pass
         return session['progress_filename']
 
-    #log.info(request.files[file])
-    #log.info(request.form['codec'])
-    #print(ast.literal_eval(request.data.decode('utf-8')))
-    #log.info(ast.literal_eval(request.data.decode('utf-8')))
-    #log.info(request.data['file'])
-    #log.info(ast.literal_eval(request.data.decode('utf-8'))['codec'])
-    return ''
+    elif request.form['request_type'] == 'convert':
+        data = request.form['states']
+        filename = request.form['filename']
+        uploaded_file_path = os.path.join("uploads", secure_filename(filename))
+        log.info(f'uploaded file path: {uploaded_file_path}')
 
-    # elif request.form["request_type"] == "convert_url":
-    #     session['progress_filename'] = f'{str(time())[:-8]}.txt'
-    #     return session['progress_filename']
+        chosen_codec = json.loads(data)['codec']
+        crf_value = json.loads(data)['crfValue']
+        video_mode = json.loads(data)['videoSetting']
+        is_keep_video = json.loads(data)['isKeepVideo']
+        # MP3
+        mp3_encoding_type = json.loads(data)['mp3EncodingType']
+        mp3_bitrate = json.loads(data)['sliderValue']
+        mp3_vbr_setting = json.loads(data)['mp3VbrSetting']
+        # AAC
+        fdk_type = json.loads(data)['aacEncodingMode']
+        fdk_cbr = json.loads(data)['sliderValue']
+        fdk_vbr = json.loads(data)['aacVbrMode']
+        # Vorbis
+        vorbis_encoding = json.loads(data)['vorbisEncodingType']
+        vorbis_quality = json.loads(data)['qValue']
+        # Vorbis/Opus
+        opus_vorbis_slider = json.loads(data)['sliderValue']
+        # AC3
+        ac3_bitrate = json.loads(data)['ac3Bitrate']
+        # FLAC
+        flac_compression = json.loads(data)['flacCompression']
+        # DTS
+        dts_bitrate = json.loads(data)['dtsBitrate']
+        # Opus
+        opus_cbr_bitrate = json.loads(data)['sliderValue']
+        opus_encoding_type = json.loads(data)['opusType']
+        # WAV
+        wav_bit_depth = json.loads(data)['wavBitDepth']
+        # Desired filename
+        output_name = request.form['output_name']
+        log.info(f'output name: {output_name}')
 
-    # elif request.form["request_type"] == "uploaded":
-    #     upload_time = datetime.now().strftime('%H:%M:%S')
-    #     log.info(f'Upload complete at {upload_time}')
-    #     uploaded_file = request.files["chosen_file"]
-    #     session['uploaded_file'] = uploaded_file.filename
-    #     filesize = request.form["filesize"]
-    #     log.info(uploaded_file)
-    #     log.info(f'Size: {filesize} MB')
-    #     # Make the filename safe.
-    #     filename_secure = secure_filename(uploaded_file.filename)
-    #     session['uploaded_file_path'] = os.path.join('uploads', filename_secure)
-    #     # Save the uploaded file to the uploads folder.
-    #     uploaded_file.save(session['uploaded_file_path'])
+        log.info(f'They chose {chosen_codec} | Output Filename: {output_name}')
+        output_path = os.path.join('conversions', output_name)
+        extension = None
 
-    #     conversion_progress_filename = f'{str(time())[:-8]}.txt'
-    #     session['progress_filename'] = conversion_progress_filename
-    #     return session['progress_filename']
+        # AAC
+        if chosen_codec == 'AAC':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, fdk_type, fdk_cbr,
+                      fdk_vbr, output_path]
+            extension = run_converter('aac', params)
 
-    # elif request.form["request_type"] == "convert":
-    #     filename = request.form["filename"]
+        # AC3
+        elif chosen_codec == 'AC3':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, ac3_bitrate, output_path]
+            extension = run_converter('ac3', params)
 
-    #     if 'http' in filename and '://' in filename:
-    #         uploaded_file_path = filename
-    #     else:
-    #         uploaded_file_path = os.path.join("uploads", secure_filename(filename))
+        # ALAC
+        elif chosen_codec == 'ALAC':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, output_path]
+            extension = run_converter('alac', params)
 
-    #     chosen_codec = request.form["chosen_codec"]
-    #     crf_value = request.form["crf_value"]
-    #     video_mode = request.form["video_mode"]
-    #     is_keep_video = request.form["is_keep_video"]
-    #     # MP3
-    #     mp3_encoding_type = request.form["mp3_encoding_type"]
-    #     mp3_bitrate = request.form["mp3_bitrate"]
-    #     mp3_vbr_setting = request.form["mp3_vbr_setting"]
-    #     # AAC
-    #     fdk_type = request.form["fdk_type"]
-    #     fdk_cbr = request.form["fdk_cbr"]
-    #     fdk_vbr = request.form["fdk_vbr"]
-    #     is_fdk_lowpass = request.form["is_fdk_lowpass"]
-    #     fdk_lowpass = request.form["fdk_lowpass"]
-    #     # Vorbis
-    #     vorbis_encoding = request.form["vorbis_encoding"]
-    #     vorbis_quality = request.form["vorbis_quality"]
-    #     # Vorbis/Opus
-    #     opus_vorbis_slider = request.form["opus_vorbis_slider"]
-    #     # AC3
-    #     ac3_bitrate = request.form["ac3_bitrate"]
-    #     # FLAC
-    #     flac_compression = request.form["flac_compression"]
-    #     # DTS
-    #     dts_bitrate = request.form["dts_bitrate"]
-    #     # Opus
-    #     opus_cbr_bitrate = request.form["opus_cbr_bitrate"]
-    #     opus_encoding_type = request.form["opus_encoding_type"]
-    #     # WAV
-    #     wav_bit_depth = request.form["wav_bit_depth"]
-    #     # Desired filename
-    #     output_name = request.form["output_name"]
+        # CAF
+        elif chosen_codec == 'CAF':
+            params = [session['progress_filename'], uploaded_file_path, output_path]
+            extension = run_converter('caf', params)
 
-    #     log.info(f'They chose {chosen_codec} | Output Filename: {output_name}')
-    #     output_path = os.path.join('conversions', output_name)
-    #     extension = None
+        # DTS
+        elif chosen_codec == 'DTS':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, dts_bitrate, output_path]
+            extension = run_converter('dts', params)
 
-    #     # AAC
-    #     if chosen_codec == 'AAC':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, fdk_type, fdk_cbr,
-    #                   fdk_vbr, is_fdk_lowpass, fdk_lowpass, output_path]
-    #         extension = run_converter('aac', params)
+        # FLAC
+        elif chosen_codec == 'FLAC':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, flac_compression,
+                      output_path]
+            extension = run_converter('flac', params)
 
-    #     # AC3
-    #     elif chosen_codec == 'AC3':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, ac3_bitrate, output_path]
-    #         extension = run_converter('ac3', params)
+        # MKA
+        elif chosen_codec == 'MKA':
+            params = [session['progress_filename'], uploaded_file_path, output_path]
+            extension = run_converter('mka', params)
 
-    #     # ALAC
-    #     elif chosen_codec == 'ALAC':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, output_path]
-    #         extension = run_converter('alac', params)
+        # MKV
+        elif chosen_codec == 'MKV':
+            params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
+            extension = run_converter('mkv', params)
 
-    #     # CAF
-    #     elif chosen_codec == 'CAF':
-    #         params = [session['progress_filename'], uploaded_file_path, output_path]
-    #         extension = run_converter('caf', params)
+        # MP3
+        elif chosen_codec == 'MP3':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, mp3_encoding_type,
+                      mp3_bitrate, mp3_vbr_setting, output_path]
+            extension = run_converter('mp3', params)
 
-    #     # DTS
-    #     elif chosen_codec == 'DTS':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, dts_bitrate, output_path]
-    #         extension = run_converter('dts', params)
+        # MP4
+        elif chosen_codec == 'MP4':
+            params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
+            extension = run_converter('mp4', params)
 
-    #     # FLAC
-    #     elif chosen_codec == 'FLAC':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, flac_compression,
-    #                   output_path]
-    #         extension = run_converter('flac', params)
+        # Opus
+        elif chosen_codec == 'Opus':
+            params = [session['progress_filename'], uploaded_file_path, opus_encoding_type, opus_vorbis_slider,
+                      opus_cbr_bitrate, output_path]
+            extension = run_converter('opus', params)
 
-    #     # MKA
-    #     elif chosen_codec == 'MKA':
-    #         params = [session['progress_filename'], uploaded_file_path, output_path]
-    #         extension = run_converter('mka', params)
+        # Vorbis
+        elif chosen_codec == 'Vorbis':
+            params = [session['progress_filename'], uploaded_file_path, vorbis_encoding, vorbis_quality,
+                      opus_vorbis_slider, output_path]
+            extension = run_converter('vorbis', params)
 
-    #     # MKV
-    #     elif chosen_codec == 'MKV':
-    #         params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
-    #         extension = run_converter('mkv', params)
+        # WAV
+        elif chosen_codec == 'WAV':
+            params = [session['progress_filename'], uploaded_file_path, is_keep_video, wav_bit_depth,
+                      output_path]
+            extension = run_converter('wav', params)
 
-    #     # MP3
-    #     elif chosen_codec == 'MP3':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, mp3_encoding_type,
-    #                   mp3_bitrate, mp3_vbr_setting, output_path]
-    #         extension = run_converter('mp3', params)
-
-    #     # MP4
-    #     elif chosen_codec == 'MP4':
-    #         params = [session['progress_filename'], uploaded_file_path, video_mode, crf_value, output_path]
-    #         extension = run_converter('mp4', params)
-
-    #     # Opus
-    #     elif chosen_codec == 'Opus':
-    #         params = [session['progress_filename'], uploaded_file_path, opus_encoding_type, opus_vorbis_slider,
-    #                   opus_cbr_bitrate, output_path]
-    #         extension = run_converter('opus', params)
-
-    #     # Vorbis
-    #     elif chosen_codec == 'Vorbis':
-    #         params = [session['progress_filename'], uploaded_file_path, vorbis_encoding, vorbis_quality,
-    #                   opus_vorbis_slider, output_path]
-    #         extension = run_converter('vorbis', params)
-
-    #     # WAV
-    #     elif chosen_codec == 'WAV':
-    #         params = [session['progress_filename'], uploaded_file_path, is_keep_video, wav_bit_depth,
-    #                   output_path]
-    #         extension = run_converter('wav', params)
-
-    #     if extension['error'] is not None:
-    #         return extension, 500
-    #     else:
-    #         # Filename after conversion.
-    #         session['converted_file_name'] = f'{output_name}{extension["ext"]}'
-    #         return extension
+        if extension['error'] is not None:
+            return extension, 500
+        else:
+            # Filename after conversion.
+            session["converted_file_name"] = f'{output_name}{extension["ext"]}'
+            return extension
 
 
-@app.route("/ffmpeg-progress/<filename>")
+@app.route('/ffmpeg-progress/<filename>')
 def get_file(filename):
+    log.info('downloadm hit')
+    log.info(filename)
     return send_from_directory('ffmpeg-progress', filename)
 
 
-@app.route("/ffmpeg_output/<filename>")
+@app.route('/ffmpeg_output/<filename>')
 def get_ffmpeg_output(filename):
     log.info(filename)
     return send_from_directory('ffmpeg_output', filename)
 
 
 # app.js directs the user to this URL when the conversion is complete.
-@app.route("/uploads/<filename>", methods=["GET"])
+@app.route('/uploads/<filename>', methods=['GET'])
 def send_file(filename):
     log.info(f'{datetime.now().strftime("[%H:%M:%S]")} https://free-av-tools.com/conversions/{filename}')
-    mimetype_value = 'audio/mp4' if os.path.splitext(filename)[1] == ".m4a" else ''
+    mimetype_value = 'audio/mp4' if os.path.splitext(filename)[1] == '.m4a' else ''
     try:
         return send_from_directory('uploads', filename, mimetype=mimetype_value, as_attachment=True)
     except Exception as error:
@@ -262,10 +231,10 @@ def send_file(filename):
 
     
 # Game 1
-@app.route("/game", methods=['POST'])
+@app.route('/game', methods=['POST'])
 def return_world_record():
     current_datetime = datetime.now().strftime('%d-%m-%y at %H:%M:%S')
-    user = request.environ.get("HTTP_X_REAL_IP").split(',')[0]
+    user = request.environ.get('HTTP_X_REAL_IP').split(',')[0]
     user_agent = request.headers.get('User-Agent')
     score = request.form['score']
     times_missed = request.form['times_missed']
@@ -277,10 +246,10 @@ def return_world_record():
         int(canvas_width)
         int(canvas_height)
     except ValueError:
-        log.error("[Game 1] The user changed something to a non-int.")
+        log.error('[Game 1] The user changed something to a non-int.')
     else:
         os.makedirs('GameScores', exist_ok=True)
-        with open("GameScores/HighScores.txt", "a") as f:
+        with open('GameScores/HighScores.txt', 'a') as f:
                 f.write(f'{score} | {times_missed} | {user} | {user_agent} | {canvas_width}'
                         f'x{canvas_height} | {current_datetime}\n')
     finally:
@@ -293,19 +262,19 @@ def return_world_record():
 
 
 # Game 2
-@app.route("/game2", methods=['POST'])
+@app.route('/game2', methods=['POST'])
 def save_game2_stats():
     current_datetime = datetime.now().strftime('%d-%m-%y at %H:%M:%S')
-    user = request.environ.get("HTTP_X_REAL_IP").split(',')[0]
+    user = request.environ.get('HTTP_X_REAL_IP').split(',')[0]
     user_agent = request.headers.get('User-Agent')
     reaction_time = request.form['reaction_time']
     try:
         int(reaction_time)
     except ValueError:
-        log.error("[Game 2] The user changed reaction_time to a non-int.")
+        log.error('[Game 2] The user changed reaction_time to a non-int.')
     else:
         os.makedirs('GameScores', exist_ok=True)
-        with open("GameScores/ReactionTimes.txt", "a") as f:
+        with open('GameScores/ReactionTimes.txt', 'a') as f:
             f.write(f'{reaction_time} ms | {user} | {user_agent} | {current_datetime}\n')
     finally:
         reaction_times = []
@@ -316,57 +285,57 @@ def save_game2_stats():
         return ''
 
 
-@app.route("/")
+@app.route('/')
 def homepage_visited():
     return render_template('index.html')
 
 
-@app.route("/about")
+@app.route('/about')
 def about_page_visited():
-    log_visit("visited about page")
-    return render_template("about.html", title="About")
+    log_visit('visited about page')
+    return render_template('about.html', title='About')
 
 
-@app.route("/filetypes")
+@app.route('/filetypes')
 def filetypes_visited():
-    log_visit("visited filetypes")
-    return render_template("filetypes.html", title="Filetypes")
+    log_visit('visited filetypes')
+    return render_template('filetypes.html', title='Filetypes')
 
 
-@app.route("/yt")
+@app.route('/yt')
 def yt_page_visited():
-    log_visit("visited YT")
-    return render_template("yt.html", title="YouTube downloader")
+    log_visit('visited YT')
+    return render_template('yt.html', title='YouTube downloader')
 
 
-@app.route("/trimmer")
+@app.route('/trimmer')
 def trimmer_visited():
-    log_visit("visited trimmer")
-    return render_template("trimmer.html", title="File Trimmer")
+    log_visit('visited trimmer')
+    return render_template('trimmer.html', title='File Trimmer')
 
 
-@app.route("/contact")
+@app.route('/contact')
 def contact_page_visited():
-    log_visit("visited contact page")
-    return render_template("contact.html", title="Contact")
+    log_visit('visited contact page')
+    return render_template('contact.html', title='Contact')
 
 
-@app.route("/game")
+@app.route('/game')
 def game_visited():
-    log_visit("visited game")
-    return render_template("game.html", title="Game")
+    log_visit('visited game')
+    return render_template('game.html', title='Game')
 
 
-@app.route("/game2")
+@app.route('/game2')
 def game2_visited():
-    log_visit("visited game 2")
-    return render_template("game2.html", title="Game 2")
+    log_visit('visited game 2')
+    return render_template('game2.html', title='Game 2')
 
 
-@app.route("/chat")
+@app.route('/chat')
 def chat():
-    log_visit("visited chat")
-    return render_template("chat.html", title="Chat")
+    log_visit('visited chat')
+    return render_template('chat.html', title='Chat')
 
     
 # Users online counter for /chat
@@ -402,5 +371,5 @@ def handle_message(message):
     socketio.emit('show message', message)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
