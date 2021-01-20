@@ -1,4 +1,13 @@
 __pycache__
-/React/node_modules
+/backend/site.db
+/backend/conversions
+/backend/downloads
+/backend/uploads
+/backend/ffmpeg_output
+/backend/flask_session
+/backend/trims
+/backend/yt-progress
+/frontend/build
+/frontend/node_modules
 /src/package-lock.json
 .eslintcache

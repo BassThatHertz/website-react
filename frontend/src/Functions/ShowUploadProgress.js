@@ -1,7 +1,3 @@
-
-
-
-
 let previousTime = Date.now() / 1000;
 let previousLoaded = 0;
 let previousPercentageComplete = 0;

@@ -8,7 +8,6 @@ __pycache__
 conversions
 downloads
 ffmpeg_output
-ffmpeg-progress
 flask_session
 GameScores
 logs

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
+import YoutubePage from './YouTubePage';
 import TopBar from './TopBar'; 
 import FileInput from './FileInput';
 import AacEncodingTypeSelector from './AAC/EncodingTypeSelector';
@@ -278,8 +279,8 @@ class App extends React.Component {
       <Router>
         <Switch>
           <Route exact path='/'>
-            <TopBar/>
             <div>
+              <TopBar/>
               <h1>Audio / Video Converter</h1>
               <p id="tagline">An easy to use, ad-free website to meet some of your audio/video needs :)</p>
               <h5>Select a file, or drag and drop a file onto this webpage.</h5>
@@ -341,8 +342,8 @@ class App extends React.Component {
               </>
             </div>
           </Route>
-          <Route path='/test'>
-            
+          <Route path='/yt'>
+            <YoutubePage/>
           </Route>
         </Switch>
       </Router>

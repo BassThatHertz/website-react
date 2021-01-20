@@ -1,9 +1,5 @@
 import sendConversionRequest from './SendConversionRequest';
 import showAlert from './ShowAlert';
-import progressWrapper from '../Elements';
-import uploadingButton from '../Elements';
-import progressParagraph from '../Elements';
-
 
 function getProgressFilename(request, inputFilename, state) {
     const uploadingButton = document.getElementById("uploading_btn");
