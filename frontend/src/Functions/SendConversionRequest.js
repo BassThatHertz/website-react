@@ -7,7 +7,6 @@ function sleep(ms) {
 
 let shouldLog = false
 let loopCount = 0
-let previousJustProgressTime = null;
 
 async function showConversionProgress(progressFilename) {
     while (shouldLog) {
@@ -20,13 +19,13 @@ async function showConversionProgress(progressFilename) {
             const lines = textInFile.split('\n');
             const fifthLastLine = lines[lines.length - 6].split('=');
             const justProgressTime = fifthLastLine.slice(-1)[0];
-            if (justProgressTime != previousJustProgressTime) {
-                const withoutMicroseconds = justProgressTime.slice(0, -7);
-                const milliseconds = justProgressTime.substring(9, 12);
-                showAlert(`${withoutMicroseconds} [HH:MM:SS] of the file has been converted so far...<br>\
-                (and ${milliseconds} milliseconds)`, 'primary');
-                console.log(`${withoutMicroseconds} [HH:MM:SS]`);
-            }
+            const withoutMicroseconds = justProgressTime.slice(0, -7);
+            const milliseconds = justProgressTime.substring(9, 12);
+
+            showAlert(`${withoutMicroseconds} [HH:MM:SS] of the file has been converted so far...<br>\
+            (and ${milliseconds} milliseconds)`, 'primary');
+            console.log(`${withoutMicroseconds} [HH:MM:SS]`);
+    
         }
     }
 }
