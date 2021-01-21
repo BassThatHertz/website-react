@@ -1,23 +1,26 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
-import YoutubePage from './YouTubePage';
-import TopBar from './TopBar'; 
-import FileInput from './FileInput';
-import AacEncodingTypeSelector from './AAC/EncodingTypeSelector';
-import AC3 from './AC3';
-import DTS from './DTS';
-import FLAC from './FLAC';
-import IsKeepVideo from './IsKeepVideo';
-import MKVMP4 from './MKVMP4';
-import Mp3EncodingTypeSelector from './MP3/EncodingTypeSelector';
-import NoOptions from './NoOptions';
-import Opus from './Opus';
-import VorbisEncodingType from './Vorbis/VorbisEncodingType';
-import WavBitDepth from './WAV';
-import SubmitButton from './SubmitButton';
+import Tagline from './Components/Tagline';
+import YoutubePage from './Components/pages/YouTubePage';
+import TopBar from './Components/TopBar'; 
+import FileInput from './Components/FileInput';
+import AacEncodingTypeSelector from './Components/AAC/EncodingTypeSelector';
+import AC3 from './Components/AC3';
+import DTS from './Components/DTS';
+import FLAC from './Components/FLAC';
+import IsKeepVideo from './Components/IsKeepVideo';
+import MKVMP4 from './Components/MKVMP4';
+import Mp3EncodingTypeSelector from './Components/MP3/EncodingTypeSelector';
+import NoOptions from './Components/NoOptions';
+import Opus from './Components/Opus';
+import VorbisEncodingType from './Components/Vorbis/VorbisEncodingType';
+import WavBitDepth from './Components/WAV';
+import SubmitButton from './Components/SubmitButton';
 
 import start from './Functions/Start';
+
+import buttonClicked from './Components/pages/yt.js'
 
 
 class App extends React.Component {
@@ -48,9 +51,16 @@ class App extends React.Component {
             vorbisEncodingType: 'abr',
             qValue: '6',
             // WAV
-            wavBitDepth: '16'
+            wavBitDepth: '16',
+            ytButtonClicked: null
           }
   
+  onYtButtonClicked = (e) => {
+    this.setState({ ytButtonClicked: e.target.value });
+    console.log(document.getElementById('link').value)
+    buttonClicked(document.getElementById('link').value, e.target.value)
+    console.log(e.target.value)
+  }
   onFileInput = (e) => {
     const filename = e.target.files[0].name;
     const filetype = e.target.files[0].type;
@@ -281,9 +291,7 @@ class App extends React.Component {
           <Route exact path='/'>
             <div>
               <TopBar/>
-              <h1>Audio / Video Converter</h1>
-              <p id="tagline">An easy to use, ad-free website to meet some of your audio/video needs :)</p>
-              <h5>Select a file, or drag and drop a file onto this webpage.</h5>
+              <Tagline/>
               <FileInput
               updateBoxes={this.onFileInput} />
               <hr></hr><h5>Desired Format</h5>
@@ -343,7 +351,10 @@ class App extends React.Component {
             </div>
           </Route>
           <Route path='/yt'>
-            <YoutubePage/>
+            <TopBar/>
+            <YoutubePage
+              onYtButtonClicked={this.onYtButtonClicked}
+              buttonClicked={this.state.ytButtonClicked} />
           </Route>
         </Switch>
       </Router>

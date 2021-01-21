@@ -78,7 +78,7 @@ def return_download_path():
     with open("logs/downloads.txt", "a") as f:
         f.write(f'\n{session["new_filename"]}')
     
-    return os.path.join('downloads', session['new_filename'])
+    return f'api/downloads/{session["new_filename"]}'
 
 
 def clean_up():
@@ -120,15 +120,15 @@ db.create_all()
 downloads_today = 0
 
 
-@yt.route("/yt", methods=["POST"])
+@yt.route("/api/yt", methods=["POST"])
 def yt_downloader():
 
-    if request.data.decode('utf-8') == 'send_progress_path':
+    if request.form['button_clicked'] == 'yes':
         update_database()
         # I want to save the download progress to a file and read from that file to show the download progress
         # to the user. Set the name of the file to the time since the epoch.
         progress_file_name = f'{str(time())[:-8]}.txt'
-        session['progress_file_path'] = os.path.join('yt-progress', progress_file_name)
+        session['progress_file_path'] = f'yt-progress/{progress_file_name}'
         return session['progress_file_path'], 200
 
     log_this(f'Clicked on {request.form["button_clicked"]}')
@@ -136,7 +136,7 @@ def yt_downloader():
     log.info(video_link)
 
     # Video (best quality)   
-    if request.form['button_clicked'] == 'Video [best]':
+    if request.form['button_clicked'] == 'video_best':
         options = {
             'format': 'bestvideo+bestaudio/best',
             'outtmpl': f'{download_dir}/%(title)s.%(ext)s',
@@ -147,7 +147,7 @@ def yt_downloader():
         return return_download_path()
     
     # MP4
-    elif request.form['button_clicked'] == 'Video [MP4]':
+    elif request.form['button_clicked'] == 'mp4':
         options = {
             'cookiefile': 'cookies.txt',
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
@@ -159,7 +159,7 @@ def yt_downloader():
         return return_download_path()
 
     # Audio (best quality)
-    elif request.form['button_clicked'] == 'Audio [best]':
+    elif request.form['button_clicked'] == 'audio_best':
         options = {
             'format': 'bestaudio/best',
             'outtmpl': f'{download_dir}/%(title)s.%(ext)s',
@@ -173,7 +173,7 @@ def yt_downloader():
         return return_download_path()
     
     # MP3
-    elif request.form['button_clicked'] == 'download_mp3':
+    elif request.form['button_clicked'] == 'audio_mp3':
         if request.form['mp3_encoding_type'] == 'cbr':
             preferredquality_value = request.form['mp3_bitrate']
             log.info(f'{preferredquality_value} kbps')
@@ -247,12 +247,14 @@ def yt_downloader():
 
 
 # This is where the youtube-dl progress file is.
-@yt.route("/yt-progress/<filename>")
+@yt.route("/api/yt-progress/<filename>")
 def get_file(filename):
+    log.info('progress url visited')
+    log.info(filename)
     return send_from_directory('yt-progress', filename)
 
 
-@yt.route("/downloads/<filename>", methods=["GET"])
+@yt.route("/api/downloads/<filename>", methods=["GET"])
 def send_file(filename):
     log.info(f'{datetime.now().strftime("[%H:%M:%S]")} {filename}')
     mimetype_value = 'audio/mp4' if Path(filename).suffix == ".m4a" else ''

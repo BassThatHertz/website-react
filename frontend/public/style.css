@@ -36,6 +36,9 @@ h5 {
 .top {
   background-color: black;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0
 }
 /* The links in the top div. */
 .top a {
@@ -69,6 +72,9 @@ h1 {
   text-align: center;
   background: darkblue;
   color:white;
+  margin: 0;
+  padding:0;
+  border: 0
 }
 /* Extend height of <htmL> element for file drag-and-drop functionality */
 html {
